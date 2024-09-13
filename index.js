@@ -49,9 +49,9 @@ app.post('/generate-questions', async (req, res) => {
 
     for (let i = 0; i < numberOfQuestions; i++) {
         try {
-            const prompt = `Generate a ${questionType === 'mcq' ? 'multiple choice question' : 'descriptive question'} on the topic: ${topic}. ${
+            const prompt = `Generate ${numberOfQuestions} of ${questionType === 'mcq' ? 'multiple choice question' : 'descriptive question'} on the topic: ${topic}. ${
               fileContent ? `Use the following content: ${fileContent}` : ''
-            } Please provide it as an array of objects with keys: question, opt1, opt2, opt3, opt4, and correctAnswer as Option number.`;
+            } Please provide it as an array of objects with keys: question, opt1, opt2, opt3, opt4, and correctAnswer as Option number only `;
 
             const result = await model.generateContent(prompt);
             const generatedText = result.response.text();
