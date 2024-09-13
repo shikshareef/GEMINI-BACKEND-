@@ -30,6 +30,15 @@ const fetchAndParsePdf = async (pdfUrl) => {
     }
 };
 
+app.get('/hitme' , async(req  , res)=>{
+    try {
+        return res.status(201).json({msg : "Server is Hitted Up and Running"})
+    } catch (error) {
+        return res.status(501).json({msg : "Problem with the server"})
+    }
+   
+})
+
 // Endpoint to generate questions
 app.post('/generate-questions', async (req, res) => {
     const { questionType, numberOfQuestions, topic, fileUrl } = req.body;
