@@ -56,7 +56,7 @@ app.post('/generate-questions', async (req, res) => {
     let mcqQuestions = [];
     let descriptiveQuestions = [];
 
-    for (let i = 0; i < numberOfQuestions; i++) {
+    for(let i=0; i<1; i++){
         try {
             const prompt = `Generate ${numberOfQuestions} of ${questionType === 'mcq' ? 'multiple choice question' : 'descriptive question'} on the topic: ${topic}. ${
               fileContent ? `Use the following content: ${fileContent}` : ''
@@ -89,6 +89,7 @@ app.post('/generate-questions', async (req, res) => {
         res.status(500).json({ error: 'Error generating the Excel file' });
     }
 });
+
 
 // Helper function to clean and parse MCQ data
 const parseMCQData = (text) => {
