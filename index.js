@@ -56,11 +56,17 @@ app.post('/generate-questions', async (req, res) => {
     let mcqQuestions = [];
     let descriptiveQuestions = [];
 
-    for(let i=0; i<1; i++){
+    // Generate questions using the model
+    for (let i = 0; i < 1; i++) {
         try {
-            const prompt = `Generate ${numberOfQuestions} of ${questionType === 'mcq' ? 'multiple choice question' : 'descriptive question'} on the topic: ${topic}. ${
-              fileContent ? `Use the following content: ${fileContent}` : ''
-            } Please provide it as an array of objects with keys: question, opt1, opt2, opt3, opt4, and correctAnswer as Option number only `;
+            const prompt = `Generate ${numberOfQuestions} ${
+                questionType === 'mcq' ? 'multiple choice questions' : 'descriptive questions'
+            } on the topic: ${topic}. ${
+                fileContent ? `Use the following content: ${fileContent}` : ''
+            } ${
+                questionType === 'mcq' 
+                ? 'Please provide it as an array of objects with keys: question, opt1, opt2, opt3, opt4, and correctAnswer as Option number only.' 
+                : 'Please provide each question as an array item without any options, and separate them by a newline.'}`;
 
             const result = await model.generateContent(prompt);
             const generatedText = result.response.text();
@@ -69,10 +75,8 @@ app.post('/generate-questions', async (req, res) => {
                 const mcqArray = parseMCQData(generatedText);
                 mcqQuestions = mcqQuestions.concat(mcqArray);
             } else {
-                const desc = {
-                    Question: generatedText
-                };
-                descriptiveQuestions.push(desc);
+                const descArray = parseDescriptiveData(generatedText);
+                descriptiveQuestions = descriptiveQuestions.concat(descArray);
             }
         } catch (error) {
             return res.status(500).json({ error: 'Error generating questions' });
@@ -89,6 +93,22 @@ app.post('/generate-questions', async (req, res) => {
         res.status(500).json({ error: 'Error generating the Excel file' });
     }
 });
+
+// Helper function to parse descriptive questions as an array
+const parseDescriptiveData = (text) => {
+    try {
+        // Split the text by newlines or periods to get individual questions
+        const questionsArray = text
+            .trim()
+            .split(/\r?\n|\.\s*/)
+            .filter(q => q.length > 2); // Remove empty or very short lines
+        return questionsArray.map(q => ({ Question: q.trim() }));
+    } catch (error) {
+        console.log('Error parsing descriptive data:', error);
+        return [];
+    }
+};
+
 
 
 // Helper function to clean and parse MCQ data
