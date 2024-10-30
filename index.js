@@ -30,6 +30,80 @@ const fetchAndParsePdf = async (pdfUrl) => {
     }
 };
 
+// Endpoint to analyze questions and generate insights using Gemini API
+app.post('/analyze-questions', async (req, res) => {
+    const { questions } = req.body;
+
+    if (!questions || !Array.isArray(questions)) {
+        return res.status(400).json({ error: "Invalid input. 'questions' must be an array." });
+    }
+
+    const questionAnalysisData = questions.map((q) => ({
+        questionId: q.questionId,
+        questionText: q.questionText,
+        optedAnswer: q.optedAnswer,
+        correctAnswer: q.correctAnswer,
+        options: q.options
+    }));
+
+    const prompt = `
+        Analyze the following user responses to quiz questions and generate a performance report in JSON format.
+        Use the structure:
+        {
+            "overallAccuracy": "STRING",
+            "bestPerformingTopics": [
+                { "topic": "STRING", "details": "STRING" }
+            ],
+            "improvementNeededTopics": [
+                { "topic": "STRING", "details": "STRING" }
+            ],
+            "specificSuggestions": [
+                { "questionId": "STRING", "suggestion": "STRING" }
+            ],
+            "strengths": [
+                { "point": "STRING", "details": "STRING" }
+            ],
+            "areasOfAppreciation": [
+                { "point": "STRING", "details": "STRING" }
+            ],
+            "furtherRecommendations": [
+                { "recommendation": "STRING", "details": "STRING" }
+            ]
+        }
+
+        Data:
+        ${JSON.stringify(questionAnalysisData)}
+    `;
+
+    try {
+        // Request analysis from the Gemini model
+        const result = await model.generateContent(prompt);
+        let analysisText = result.response.text();
+
+        // Remove code block markers or other invalid JSON characters
+        analysisText = analysisText.replace(/```json|```/g, '').trim();
+
+        // Attempt to parse the cleaned response as JSON
+        let structuredAnalysis;
+        try {
+            structuredAnalysis = JSON.parse(analysisText);
+        } catch (parseError) {
+            console.error('Error parsing the analysis JSON:', parseError);
+            return res.status(500).json({ error: 'Error parsing analysis response' });
+        }
+
+        res.status(200).json({
+            analysis: structuredAnalysis,
+        });
+    } catch (error) {
+        console.error('Error generating insights:', error);
+        res.status(500).json({ error: 'Error generating insights' });
+    }
+});
+
+
+
+
 app.get('/hitme' , async(req  , res)=>{
     try {
         return res.status(201).json({msg : "Server is Hitted Up and Running"})
